@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
-set -e
-
 network=${1?Expecting network name}
+shift
 
-docker run -it --rm \
-    --name swarm-health-alerter-test \
+NAME=swarm-health-alerter-test
+
+docker run --rm \
+    -it \
+    --name $NAME \
     --network $network \
+    --env SLEEP="$SLEEP" \
+    --env ALERT_SCRIPT="$ALERT_SCRIPT" \
+    --env SWARM_NAME="$SWARM_NAME" \
+    --env ZENDUTY_API_KEY="$ZENDUTY_API_KEY" \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume .:/app/ \
-    brablc/swarm-health-alerter:dev
+    brablc/swarm-health-alerter:dev "$@"
