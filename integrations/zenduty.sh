@@ -51,8 +51,8 @@ cat << __PAYLOAD > $request_file
 }
 __PAYLOAD
 
-log_info "Request file:"
-jq . $request_file 2>/dev/null || cat $request_file
+# log_info "Request file:"
+# jq . $request_file 2>/dev/null || cat $request_file
 
 url="https://www.zenduty.com/api/events/${ZENDUTY_API_KEY}/"
 curl -s -X POST "$url" -H 'Content-Type: application/json' -d @$request_file >$response_file 2>&1
