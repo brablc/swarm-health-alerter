@@ -9,7 +9,7 @@ docker run --rm \
     -it \
     --name $NAME \
     --network $network \
-    --env SLEEP="$SLEEP" \
+    --env LOOP_SLEEP="$LOOP_SLEEP" \
     --env ALERT_SCRIPT="$ALERT_SCRIPT" \
     --env SWARM_NAME="$SWARM_NAME" \
     --env ZENDUTY_API_KEY="$ZENDUTY_API_KEY" \

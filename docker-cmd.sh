@@ -3,7 +3,7 @@
 source ./config.sh
 source ./logger.sh
 
-SLEEP=${SLEEP:-10s}
+LOOP_SLEEP=${LOOP_SLEEP:-10s}
 
 test -z "$ALERT_SCRIPT" && log_warn "Env ALERT_SCRIPT not defined - alerting disabled"
 test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
@@ -50,9 +50,9 @@ function check_services() {
 log_info "Initial list of services (run services.sh using docker exec to see actual):"
 ./services.sh
 
-log_info "Entering loop with ${SLEEP} sleep ..."
+log_info "Entering loop with ${LOOP_SLEEP} sleep ..."
 
 while true; do
-    sleep $SLEEP
+    sleep $LOOP_SLEEP
     check_services
 done
