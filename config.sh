@@ -1,0 +1,3 @@
+OK_FILE="/tmp/ok"
+LOGGER_USE_TS=1
+SCRIPT_NAME=${0##*/}
