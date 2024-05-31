@@ -5,6 +5,7 @@ ENV DOCKERIZE_VERSION v0.7.0
 WORKDIR /app
 
 COPY *.sh ./
+COPY integrations/ integrations/
 
 RUN apk update --no-cache \
     && apk add --no-cache bash curl jq openssl \

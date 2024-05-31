@@ -9,7 +9,7 @@ test -z "$ALERT_SCRIPT" && log_warn "Env ALERT_SCRIPT not defined - alerting dis
 test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
 
 if [[ -n $ALERT_SCRIPT && ! -f $ALERT_SCRIPT ]]; then
-    log_err "Alert script defined but not accessible on $ALERT_SCRIPT path"
+    log_error "Alert script defined but not accessible on $ALERT_SCRIPT path"
     ALERT_SCRIPT=""
 fi
 
