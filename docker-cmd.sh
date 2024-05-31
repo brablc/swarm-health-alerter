@@ -5,6 +5,11 @@ source ./logger.sh
 
 LOOP_SLEEP=${LOOP_SLEEP:-10s}
 
+if [[ ! -S /var/run/docker.sock ]]; then
+    log_error "Mount to /var/run/docker.sock missing?"
+    exit 1
+fi
+
 test -z "$ALERT_SCRIPT" && log_warn "Env ALERT_SCRIPT not defined - alerting disabled"
 test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
 
