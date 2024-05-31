@@ -5,24 +5,40 @@ source ./logger.sh
 
 SLEEP=${SLEEP-10s}
 
-function get_cmd() {
-    cmd=(./dockerize -timeout 300s -wait-retry-interval 5s)
-    while read SERVICE; do
-        cmd+=(-wait $SERVICE)
+function check_services() {
+    while read service network_alias port; do
+        prefix="/tmp/alert-$(echo "$service $network_alias:$port" | base64)"
+        alert_file=${prefix}-alert
+        log_file=${prefix}-log
+        # used for testing
+        real_port=$port
+        if [[ -f test-change-port-$port ]]; then
+            read real_port < test-change-port-$port
+        fi
+        ./dockerize -timeout 5s -wait tcp://$network_alias:$real_port true 2>$log_file
+        if [ $? -ne 0 ]; then
+            if [[ -f $alert_file ]]; then
+                log_warn "$service|$network_alias:$port|Pending alert"
+            else
+                log_error "$service|$network_alias:$port|New alert"
+                echo "$service $network_alias:$port"> $alert_file
+                cat $log_file
+            fi
+        else
+            if [[ -f $alert_file ]]; then
+                log_info "$service|$network_alias:$port|Resolved alert"
+                rm -f $alert_file
+            fi
+        fi
     done < <(./services.sh)
-    cmd+=(touch $OK_FILE)
-    echo ${cmd[@]}
 }
+
+log_info "Initial list of services (run services.sh using docker exec to see actual):"
+./services.sh
 
 log_info "Entering loop with ${SLEEP} sleep ..."
 
 while true; do
-    eval $(get_cmd)
-    if [ -f $OK_FILE ]; then
-        log_info OK
-        sleep $SLEEP
-        rm -f $OK_FILE
-    else
-        log_error TIMEOUT
-    fi
+    sleep $SLEEP
+    check_services
 done
