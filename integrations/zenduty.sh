@@ -1,61 +1,61 @@
 #!/usr/bin/env bash
 
-echo "Reading log file from stdin ..." >&2
-summary=$(cat | jq -Rs .)
-
 script_path=$(readlink -f $0)
 script_dir=${script_path%/*}
-source "$script_dir/../config.sh"
 source "$script_dir/../logger.sh"
+
+DATA_DIR=${DATA_DIR:-$script_dir/../data}
+
+input_file=$(mktemp $DATA_DIR/zenduty-input.XXXXXX)
+trap "rm -f $input_file" EXIT
+
+if ! timeout 2s cat > $input_file; then
+    log_error "Reading from stdin timed out."
+    exit 1
+fi
 
 if [[ -z $ZENDUTY_API_KEY ]]; then
     log_error "Expecting ZENDUTY_API_KEY env"
     exit 1
 fi
 
-if [[ $# != 5 ]]; then
-    log_error "Expecting parameters: ACTION SWARM_NAME SERVICE_NAME NETWORK_ALIAS PORT"
-    exit 1
-fi
-
-ACTION=$1
-SWARM_NAME=$2
-SERVICE_NAME=$3
-NETWORK_ALIAS=$4
-PORT=$5
+action=$(jq -r .action $input_file)
+entity_id=$(jq -r .unique_id $input_file)
 
 alert_type=""
-case $ACTION in
-    CREATE )
+appendix=""
+case $action in
+    create )
         alert_type="critical"
+        appendix="not available"
         ;;
-    RESOLVE )
+    resolve )
         alert_type="resolved"
+        appendix="is available"
         ;;
     *)
-        log_error "Action must be one of: CREATE RESOLVE. Received: '$ACTION'"
+        log_error "Action must be one of: create resolve. Received: '$action'"
         ;;
 esac
 
-read entity_id rest < <(echo "${SWARM_NAME}_${SERVICE_NAME}_${NETWORK_ALIAS}_${PORT}" | md5sum)
+request_file=$DATA_DIR/${entity_id}-zenduty-request.json
+response_file=$DATA_DIR/${entity_id}-zenduty-response.json
 
-request_file=/tmp/zenduty-request-${entity_id}.json
-response_file=/tmp/zenduty-response-${entity_id}.json
+jq -r \
+    --arg alert_type "$alert_type" \
+    --arg appendix "$appendix" \
+    '{
+        "alert_type": $alert_type,
+        "entity_id": .unique_id,
+        "message": "\(.swarm_name) service \(.service_name) (\(.network_alias):\(.port)) \($appendix)",
+        "summary": .log
+    }' $input_file > $request_file
 
-cat << __PAYLOAD > $request_file
-{
-    "alert_type": "$alert_type",
-    "entity_id": "$entity_id",
-    "message":"$SWARM_NAME service $SERVICE_NAME ($NETWORK_ALIAS:$PORT) not available",
-    "summary": $summary
-}
-__PAYLOAD
-
-# log_info "Request file:"
-# jq . $request_file 2>/dev/null || cat $request_file
+log_info "Request file:"
+jq . $request_file 2>/dev/null || cat $request_file
 
 url="https://www.zenduty.com/api/events/${ZENDUTY_API_KEY}/"
-curl -s -X POST "$url" -H 'Content-Type: application/json' -d @$request_file >$response_file 2>&1
+curl -s -X POST "$url" -H 'Content-Type: application/json' -d @$request_file >$response_file
 return_code=$?
 
 if [ $return_code -ne 0 ]; then
@@ -65,7 +65,7 @@ fi
 log_info "Response file:"
 jq . $response_file 2>/dev/null || cat $response_file
 
-if [[ $ACTION == "RESOLVE" ]]; then
+if [[ $action == "resolve" ]]; then
     rm -f $request_file
     rm -f $response_file
 fi

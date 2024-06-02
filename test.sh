@@ -13,6 +13,7 @@ docker run --rm \
     --env ALERT_SCRIPT="$ALERT_SCRIPT" \
     --env SWARM_NAME="$SWARM_NAME" \
     --env ZENDUTY_API_KEY="$ZENDUTY_API_KEY" \
+    --env DATA_DIR=/app/data \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume .:/app/ \
     brablc/swarm-health-alerter:dev "$@"

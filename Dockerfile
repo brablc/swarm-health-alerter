@@ -2,7 +2,11 @@ FROM alpine:latest
 
 ENV DOCKERIZE_VERSION v0.7.0
 
+ENV DATA_DIR=/data
+
 WORKDIR /app
+
+RUN mkdir -p "$DATA_DIR"
 
 COPY *.sh ./
 COPY integrations/ integrations/
