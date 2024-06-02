@@ -8,7 +8,7 @@ url=http://v1.45
 
 LABEL="swarm-health-alerter.port"
 
-curl -s --fail-with-body --unix-socket $sock $url/servicess -o /tmp/services
+curl -s --fail-with-body --unix-socket $sock $url/services -o /tmp/services
 if [ $? -ne 0 ]; then
     log_error "$(jq -r .message /tmp/services 2>/dev/null || cat /tmp/services)"
     exit 1
