@@ -40,11 +40,15 @@ networks:
 services:    
     alerter:
         image: brablc/swarm-health-alerter
+        tty: true
         networks:
             - app
             - web
         deploy:
             replicas: 1
+            placement:
+                constraints:
+                    - node.role == manager
         environment:
             LOOP_SLEEP: 10s
             ZENDUTY_API_KEY: YOUR_ZENDDUTY_API_KEY
