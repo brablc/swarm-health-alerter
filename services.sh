@@ -19,20 +19,18 @@ function get_services() {
 }
 
 function get_service() {
-    local service="$1"
-    cat /tmp/services | jq -r '.[] | select(.Spec.Name=="'$service'")'
+    local service_name="$1"
+    cat /tmp/services | jq -r '.[] | select(.Spec.Name=="'$service_name'")'
 }
 
-while read service; do
-    ports=$(get_service $service | jq -r '.Spec.Labels["'$LABEL'"]')
-    test "$ports" != "null" || continue
+while read service_name; do
+    ports=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL'"]')
 
-    network_alias=$(get_service $service | jq -r '.Spec.TaskTemplate.Networks[].Aliases[]' | sort | head -1)
+    if [[ "$ports" != "null" ]]; then
+        network_alias=$(get_service $service_name | jq -r '.Spec.TaskTemplate.Networks[].Aliases[]' | sort | head -1)
+        read service_id mode replicas < <(get_service $service_name | jq -r '"\(.ID) \(.Spec.Mode | keys[0]) \(.Spec.Mode.Replicated.Replicas)"')
+        [[ $mode == "Replicated" && $replicas == 0 ]] && continue
 
-    echo $ports | sed 's/,/\n/g' | while read port; do
-        read service_id mode replicas < <(get_service $service | jq -r '"\(.ID) \(.Spec.Mode | keys[0]) \(.Spec.Mode.Replicated.Replicas)"')
-        if [[ $mode == "Global" || ( $mode == "Replicated" && "$replicas" != "0" ) ]]; then
-            echo "$service $network_alias $port"
-        fi
-    done
+        echo $ports | sed 's/,/\n/g' | while read port; do echo "$service_name $network_alias $port"; done
+    fi
 done < <(get_services)
