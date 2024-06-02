@@ -58,7 +58,7 @@ function check_services() {
         fi
         if [[ -n $action ]]; then
             jq -n \
-                --arg action        "create" \
+                --arg action        "$action" \
                 --arg unique_id     "$unique_id" \
                 --arg swarm_name    "$swarm_name" \
                 --arg service_name  "$service_name" \
