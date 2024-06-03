@@ -1,3 +1,4 @@
 dockerize
 data
 __pycache__
+.venv
