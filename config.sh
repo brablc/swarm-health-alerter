@@ -1,2 +1,5 @@
 LOGGER_USE_TS=1
+LOGGER_USE_SYSLOG=0
 SCRIPT_NAME=${0##*/}
+DATA_DIR=${DATA_DIR:-$script_dir/data}
+mkdir -p $DATA_DIR

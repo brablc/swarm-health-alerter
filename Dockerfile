@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM python:3.12-alpine
 
 ENV DOCKERIZE_VERSION v0.7.0
 
@@ -9,6 +9,7 @@ WORKDIR /app
 RUN mkdir -p "$DATA_DIR"
 
 COPY *.sh ./
+COPY *.py ./
 COPY integrations/ integrations/
 
 RUN apk update --no-cache \
