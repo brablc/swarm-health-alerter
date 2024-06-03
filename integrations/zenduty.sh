@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-script_path=$(readlink -f $0)
-script_dir=${script_path%/*}
-source "$script_dir/../logger.sh"
+SCRIPT_PATH=$(readlink -f $0)
+SCRIPT_DIR=${SCRIPT_PATH%/*}
+source "$SCRIPT_DIR/../logger.sh"
 
-DATA_DIR=${DATA_DIR:-$script_dir/../data}
+DATA_DIR=${DATA_DIR:-$SCRIPT_DIR/../data}
 
 input_file=$(mktemp $DATA_DIR/zenduty-input.XXXXXX)
 trap "rm -f $input_file" EXIT

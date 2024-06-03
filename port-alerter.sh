@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-script_path=$(readlink -f $0)
-script_dir=${script_path%/*}
-cd "$script_dir"
 source "./config.sh"
 source "./logger.sh"
+source "./checks.sh"
 
 function check_services() {
     local swarm_name=$SWARM_NAME

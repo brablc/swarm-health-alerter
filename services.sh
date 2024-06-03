@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-source ./config.sh
-source ./logger.sh
-
-LABEL="swarm-health-alerter.port"
+source "./config.sh"
+source "./logger.sh"
+source "./checks.sh"
 
 ./docker-api.sh /services > /tmp/services
 if [ $? -ne 0 ]; then
