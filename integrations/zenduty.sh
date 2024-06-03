@@ -20,18 +20,18 @@ if [[ -z $ZENDUTY_API_KEY ]]; then
 fi
 
 action=$(jq -r .action $input_file)
+message=$(jq -r .message $input_file)
 entity_id=$(jq -r .unique_id $input_file)
 
 alert_type=""
-appendix=""
 case $action in
     create )
         alert_type="critical"
-        appendix="not available"
+        log_error "Creating alert: $message"
         ;;
     resolve )
         alert_type="resolved"
-        appendix="is available"
+        log_info "Resolving alert: $message"
         ;;
     *)
         log_error "Action must be one of: create resolve. Received: '$action'"
@@ -47,8 +47,8 @@ jq -r \
     '{
         "alert_type": $alert_type,
         "entity_id": .unique_id,
-        "message": "\(.swarm_name) service \(.service_name) (\(.network_alias):\(.port)) \($appendix)",
-        "summary": .log
+        "message": .message,
+        "summary": .summary
     }' $input_file > $request_file
 
 log_info "Request file:"
