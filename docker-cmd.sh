@@ -8,6 +8,7 @@ source "./logger.sh"
 
 export LOOP_SLEEP=${LOOP_SLEEP:-10}
 export ALERTER_URL=${ALERTER_URL:-http://alerter:80}
+export SWARM_NAME=${SWARM_NAME:-Swarm}
 
 if [[ ! -S /var/run/docker.sock ]]; then
     log_error "Mount to /var/run/docker.sock missing?"
@@ -38,10 +39,8 @@ fi
 
 ### Manager code only
 
-test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
-swarm_name="${SWARM_NAME:-Swarm}"
-
 function check_services() {
+    local swarm_name=$SWARM_NAME
     while read service_name network_alias port; do
         unique_name=$(echo "${swarm_name} ${service_name} ${network_alias} ${port}" )
         unique_code=$(echo "${unique_name,,}" | sed -e 's/ /_/g' -e 's/[^a-zA-Z0-9_-]/_/g')

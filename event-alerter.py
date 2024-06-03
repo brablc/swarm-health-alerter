@@ -41,16 +41,15 @@ def process_events():
     while events and events[0]["ts"] <= current_time - EVENTS_WINDOW:
         events.popleft()
 
-    # Count events per service
     for event in events:
         counts[event["service_name"]][event["action"]] += 1
         hosts[event["service_name"]].add(event["host"])
         seen_services.add(event["service_name"])
 
     for service_name, actions in counts.items():
-        if (
-            actions["destroy"] < EVENTS_THRESHOLD
-            and actions["create"] < EVENTS_THRESHOLD
+        if not (
+            actions["destroy"] >= EVENTS_THRESHOLD
+            and actions["create"] >= EVENTS_THRESHOLD
         ):
             continue
 
@@ -63,10 +62,9 @@ def process_events():
                 f"{SWARM_NAME} {service_name} {get_random_str(10)}"
             ),
             "message": f"{SWARM_NAME} service {service_name} not healthy",
-            "summary": f"There were {actions["create"]} containers created and {actions["destroy"]} destroyed within {EVENTS_WINDOW} seconds.\nReported by {list(hosts[service_name])} hosts.",
+            "summary": f"There were {actions["create"]} containers created and {actions["destroy"]} destroyed within {EVENTS_WINDOW} seconds.\nReported by {list(hosts[service_name])} host(s).",
         }
         pending_alerts[service_name] = data
-        log_error(f"Creating alert: {data["message"]}")
         send_alert(data)
 
     for service_name in list(pending_alerts.keys()):
@@ -80,7 +78,6 @@ def process_events():
             "summary": f"No events in last {EVENTS_WINDOW} seconds, assuming service is healthy (or stopped)",
         }
         del pending_alerts[service_name]
-        log_info(f"Resolving alert: {data["message"]}")
         send_alert(data)
 
 
