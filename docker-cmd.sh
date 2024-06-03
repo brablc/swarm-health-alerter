@@ -6,8 +6,8 @@ cd "$script_dir"
 source "./config.sh"
 source "./logger.sh"
 
-LOOP_SLEEP=${LOOP_SLEEP:-10}
-ALERTER_URL=${ALERTER_URL:-http://alerter:80}
+export LOOP_SLEEP=${LOOP_SLEEP:-10}
+export ALERTER_URL=${ALERTER_URL:-http://alerter:80}
 
 if [[ ! -S /var/run/docker.sock ]]; then
     log_error "Mount to /var/run/docker.sock missing?"
@@ -16,11 +16,8 @@ fi
 
 if [[ -z $ALERT_SCRIPT || ! -f $ALERT_SCRIPT ]]; then
     log_error "Alert script not defined or not accessible on \"$ALERT_SCRIPT\" path!"
-    ALERT_SCRIPT="jq ."
+    export ALERT_SCRIPT="jq ."
 fi
-
-test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
-swarm_name="${SWARM_NAME:-Swarm}"
 
 # On all nodes start scraper, on manager node start alerter
 
@@ -40,6 +37,9 @@ else
 fi
 
 ### Manager code only
+
+test -z "$SWARM_NAME" && log_warn "Env SWARM_NAME not defined using default"
+swarm_name="${SWARM_NAME:-Swarm}"
 
 function check_services() {
     while read service_name network_alias port; do
