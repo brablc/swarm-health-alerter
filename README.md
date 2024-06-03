@@ -1,21 +1,18 @@
 # swarm-health-alerter
 
-Create/resolve alerts when some services are not running in docker swarm.
+Detect unhealthy containers using two methods:
 
-## Functionality
+1. **🚪Opened ports** - uses auto discovery and checks whether services with non zero replicas are available on those ports.
+2. **💔 Failing services** - uses [Docker Events API](https://docs.docker.com/engine/api/v1.45/#tag/System/operation/SystemEvents) to detect containers, that are restarted too often.
 
-Uses auto discovery, just add labels to your services with list of ports: `swarm-health-alerter.port=80,443` . 
+## Configuration 
 
-> [!TIP]
-> More checking can be added, just ask for them.
+### 🚪Opened ports
 
-### Monitored conditions:
+Add label `swarm-health-alerter.port` to all services, that should be monitored. Add `alerter` service to all networks so it can reach the ports:
 
-- Monitored are services containing label `swarm-health-alerter.port` which are running in global mode or running in replicated mode with non-zero number of replicas.
-
-### Configuration example
-
-```sh
+```yml
+services:
     rabbitmq:
         image: rabbitmq:3-management-alpine
         networks:
@@ -26,22 +23,37 @@ Uses auto discovery, just add labels to your services with list of ports: `swarm
                 - "swarm-health-alerter.port=5672,15672"
 ```
 
+### 💔 Failing services
+
+Sometimes your service would fail (or be killed by healthcheck) and restart. The `scraper` service (does not have to be in the same network) monitors events `destroy` and `create` and sends them to the `alerter` who evaluates them.
+
+If the number of `destroy` or `create` events exceeds configured `EVENTS_THRESHOLD` within `EVENTS_WINDOW` the service is deemed unhealthy and alert is created. If there was no event from the service withing the window, the problem is deemed resolved.
+
 ## Installation
 
-Add an alerter service to some of your stacks and add it to all networks it should be checking:
+Add an alerter service to some of your stacks and add it to all networks where it should be checking ports:
+
+> [!IMPORTANT]
+> Service `alerter` and `scraper` must be both in the same network (does not have to be dedicated).
+> If you change the name of the `alerter` service you have to change `scraper`'s `ALERTER_URL`.
 
 ```yml
 networks:
+    alerter:
+        driver: overlay
+        attachable: true
     app:
         external: true
     web:
         external: true
 
-services:    
-    alerter:
+services:
+   alerter:
         image: brablc/swarm-health-alerter
         tty: true
+        hostname: '{{.Node.Hostname}}'
         networks:
+            - alerter
             - app
             - web
         deploy:
@@ -50,10 +62,25 @@ services:
                 constraints:
                     - node.role == manager
         environment:
-            LOOP_SLEEP: 10s
-            ZENDUTY_API_KEY: YOUR_ZENDDUTY_API_KEY
             ALERT_SCRIPT: /app/integrations/zenduty.sh
+            EVENTS_THRESHOLD: 3
+            EVENTS_WINDOW: 300
+            LOOP_SLEEP: 10s
             SWARM_NAME: ExampleSwarm
+            ZENDUTY_API_KEY: YOUR_ZENDUTY_API_KEY
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+    scraper:
+        image: brablc/swarm-health-alerter
+        tty: true
+        hostname: '{{.Node.Hostname}}'
+        networks:
+            - alerter
+        deploy:
+            mode: global
+        environment:
+            ALERTER_URL: http://alerter:80
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
 ```
