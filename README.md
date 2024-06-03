@@ -25,62 +25,32 @@ services:
 
 ### 💔 Failing services
 
-Sometimes your service would fail (or be killed by healthcheck) and restart. The `scraper` service (does not have to be in the same network) monitors events `destroy` and `create` and sends them to the `alerter` who evaluates them.
+Sometimes your service would fail (or be killed by healthcheck) and restart. This would be seen as event `destroy` and `create`.
 
-If the number of `destroy` or `create` events exceeds configured `EVENTS_THRESHOLD` within `EVENTS_WINDOW` the service is deemed unhealthy and alert is created. If there was no event from the service withing the window, the problem is deemed resolved.
+If both the number of `destroy` and `create` events exceed configured `EVENTS_THRESHOLD` within `EVENTS_WINDOW`, the service is deemed unhealthy and alert is created. If there was no event from the service withing the window, the problem is deemed resolved.
 
 ## Installation
 
 Add an alerter service to some of your stacks and add it to all networks where it should be checking ports:
 
-> [!IMPORTANT]
-> Service `alerter` and `scraper` must be both in the same network (does not have to be dedicated).
-> If you change the name of the `alerter` service you have to change `scraper`'s `ALERTER_URL`.
-
 ```yml
-networks:
-    alerter:
-        driver: overlay
-        attachable: true
-    app:
-        external: true
-    web:
-        external: true
-
 services:
    alerter:
         image: brablc/swarm-health-alerter
         tty: true
         hostname: '{{.Node.Hostname}}'
         networks:
-            - alerter
             - app
             - web
         deploy:
-            replicas: 1
-            placement:
-                constraints:
-                    - node.role == manager
+            mode: global
         environment:
             ALERT_SCRIPT: /app/integrations/zenduty.sh
             EVENTS_THRESHOLD: 3
-            EVENTS_WINDOW: 300
+            EVENTS_WINDOW: 6~0
             LOOP_SLEEP: 10
             SWARM_NAME: ExampleSwarm
             ZENDUTY_API_KEY: YOUR_ZENDUTY_API_KEY
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-
-    scraper:
-        image: brablc/swarm-health-alerter
-        tty: true
-        hostname: '{{.Node.Hostname}}'
-        networks:
-            - alerter
-        deploy:
-            mode: global
-        environment:
-            ALERTER_URL: http://alerter:80
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
 ```
