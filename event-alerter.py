@@ -14,11 +14,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from collections import defaultdict, deque
 from logger import log_info, log_error
 
-CLEANUP_INTERVAL = 60
-
+ALERT_SCRIPT = os.getenv("ALERT_SCRIPT", "jq .")
 EVENTS_WINDOW = int(os.getenv("EVENTS_WINDOW", "300"))
 EVENTS_THRESHOLD = int(os.getenv("EVENTS_THRESHOLD", "3"))
-ALERT_SCRIPT = os.getenv("ALERT_SCRIPT", "jq .")
+LOOP_SLEEP = int(os.getenv("LOOP_SLEEP", "10"))
 SWARM_NAME = os.getenv("SWARM_NAME", "Swarm")
 
 events = deque()
@@ -104,7 +103,7 @@ def send_alert(data):
 
 def resolve_pending():
     while True:
-        time.sleep(CLEANUP_INTERVAL)
+        time.sleep(LOOP_SLEEP)
         with lock:
             process_events()
 

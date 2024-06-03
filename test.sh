@@ -15,7 +15,7 @@ docker run --rm \
     --env EVENTS_THRESHOLD="${EVENTS_THRESHOLD:-3}" \
     --env EVENTS_WINDOW="${EVENTS_WINDOW:-60}" \
     --env LOGGER_USE_TS="${LOGGER_USE_TS:-1}" \
-    --env LOOP_SLEEP="${LOOP_SLEEP:-10s}" \
+    --env LOOP_SLEEP="${LOOP_SLEEP:-10}" \
     --env SWARM_NAME="${SWARM_NAME:-Swarm}" \
     --env ZENDUTY_API_KEY="${ZENDUTY_API_KEY:-N/A}" \
     --volume /var/run/docker.sock:/var/run/docker.sock \

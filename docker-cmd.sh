@@ -6,7 +6,8 @@ cd "$script_dir"
 source "./config.sh"
 source "./logger.sh"
 
-LOOP_SLEEP=${LOOP_SLEEP:-10s}
+LOOP_SLEEP=${LOOP_SLEEP:-10}
+ALERTER_URL=${ALERTER_URL:-http://alerter:80}
 
 if [[ ! -S /var/run/docker.sock ]]; then
     log_error "Mount to /var/run/docker.sock missing?"

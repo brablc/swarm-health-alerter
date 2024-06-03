@@ -5,7 +5,7 @@ Detect unhealthy containers using two methods:
 1. **🚪Opened ports** - uses auto discovery and checks whether services with non zero replicas are available on those ports.
 2. **💔 Failing services** - uses [Docker Events API](https://docs.docker.com/engine/api/v1.45/#tag/System/operation/SystemEvents) to detect containers, that are restarted too often.
 
-## Configuration 
+## Configuration
 
 ### 🚪Opened ports
 
@@ -65,7 +65,7 @@ services:
             ALERT_SCRIPT: /app/integrations/zenduty.sh
             EVENTS_THRESHOLD: 3
             EVENTS_WINDOW: 300
-            LOOP_SLEEP: 10s
+            LOOP_SLEEP: 10
             SWARM_NAME: ExampleSwarm
             ZENDUTY_API_KEY: YOUR_ZENDUTY_API_KEY
         volumes:
@@ -87,8 +87,6 @@ services:
 
 ## Integrations
 
-At the moment there is only integration - with [Zenduty.com](https://www.zenduty.com/pricing/). The Free plan supports creation of events via [API](https://apidocs.zenduty.com/?ref=zenduty.com#tag/Events). Events can be used to create and resolve incidents. Incidents are pushed to a mobile app with critical alert support. Perfect 😍! In your account navigate to **Setup** > **Step 4 Configure Integrations** and add **Zenduty API**. Copy the integration key and use in `ZENDUTY_API_KEY`. 
+At the moment there is only integration - with [Zenduty.com](https://www.zenduty.com/pricing/). The Free plan supports creation of events via [API](https://apidocs.zenduty.com/?ref=zenduty.com#tag/Events). Events can be used to create and resolve incidents. Incidents are pushed to a mobile app with critical alert support. Perfect 😍! In your account navigate to **Setup** > **Step 4 Configure Integrations** and add **Zenduty API**. Copy the integration key and use in `ZENDUTY_API_KEY`.
 
 You can add another integration without rebuilding the image (I would recommend using a swarm config and mounting it to the integrations directory and changing `ALERT_SCRIPT` variable acordingly). Or just ask me for help.
-
-
