@@ -86,7 +86,7 @@ function check_services() {
                   "action": $action,
                   "unique_id": $unique_id,
                   "message": $message,
-                  "summary": $log
+                  "summary": $summary
                 }' | /bin/bash -c "$ALERT_SCRIPT"
         fi
         rm -f $log_file
