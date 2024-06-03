@@ -23,19 +23,19 @@ fi
 # On all nodes start scraper, on manager node start alerter
 
 services=$(./services.sh 2>&1)
-if [ $? = 0 ]; then
-    log_info "Initial list of services (run services.sh using docker exec to see actual):"
-    echo "$services"
-    log_info "Starting event alerter ..."
-    ./event-alerter.py &
-    trap "kill $!" EXIT
-    log_info "Starting event scraper ..."
-    ./event-scraper.sh &
-    trap "kill $!" EXIT
-else
-    ./event-monitor.sh
+if [ $? != 0 ]; then
+    ./event-scraper.sh
     exit
 fi
+
+log_info "Initial list of services (run services.sh using docker exec to see actual):"
+echo "$services"
+log_info "Starting event alerter ..."
+./event-alerter.py &
+trap "kill $!" EXIT
+log_info "Starting event scraper ..."
+./event-scraper.sh &
+trap "kill $!" EXIT
 
 ### Manager code only
 
