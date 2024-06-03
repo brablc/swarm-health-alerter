@@ -46,7 +46,7 @@ function check_services() {
                 --arg action    "$action" \
                 --arg unique_id "$unique_id" \
                 --arg message   "$message $appendix" \
-                --arg summary   "$(jq -R -s @json $log_file)" \
+                --arg summary   "$(cat $log_file)" \
                 '{
                   "action": $action,
                   "unique_id": $unique_id,
