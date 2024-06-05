@@ -51,8 +51,8 @@ jq -r \
         "summary": .summary
     }' $input_file > $request_file
 
-log_info "Request file:"
-jq . $request_file 2>/dev/null || cat $request_file
+test -n "$VERBOSE" && log_info "Request file:"
+test -n "$VERBOSE" && ( jq . $request_file 2>/dev/null || cat $request_file )
 
 url="https://www.zenduty.com/api/events/${ZENDUTY_API_KEY}/"
 curl -s -X POST "$url" -H 'Content-Type: application/json' -d @$request_file >$response_file
@@ -62,8 +62,8 @@ if [ $return_code -ne 0 ]; then
     log_error "Curl failed with code $return_code"
 fi
 
-log_info "Response file:"
-jq . $response_file 2>/dev/null || cat $response_file
+test -n "$VERBOSE" && log_info "Response file:"
+test -n "$VERBOSE" && ( jq . $response_file 2>/dev/null || cat $response_file )
 
 if [[ $action == "resolve" ]]; then
     rm -f $request_file
