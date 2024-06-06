@@ -131,12 +131,17 @@ def main():
         resolving_thread.start()
 
         for event in docker_events_stream():
+            attrs = event["Actor"]["Attributes"]
+            service_name = attrs.get("com.docker.swarm.service.name", None)
+            if service_name is None:
+                image = attrs.get("image")
+                name = attrs.get("name")
+                service_name = f"{image} {name}"
+
             data = {
                 "ts": event["time"],
                 "action": event["Action"],
-                "service_name": event["Actor"]["Attributes"].get(
-                    "com.docker.swarm.service.name", "unknown"
-                ),
+                "service_name": service_name,
             }
 
             # log_info(json.dumps(data))
