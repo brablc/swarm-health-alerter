@@ -55,7 +55,7 @@ services:
         environment:
             ALERT_SCRIPT: /app/integrations/zenduty.sh
             EVENTS_THRESHOLD: 3
-            EVENTS_WINDOW: 6~0
+            EVENTS_WINDOW: 60
             LOOP_SLEEP: 10
             SWARM_NAME: ExampleSwarm
             ZENDUTY_API_KEY: YOUR_ZENDUTY_API_KEY
@@ -68,3 +68,9 @@ services:
 At the moment there is only integration - with [Zenduty.com](https://www.zenduty.com/pricing/). The Free plan supports creation of events via [API](https://apidocs.zenduty.com/?ref=zenduty.com#tag/Events). Events can be used to create and resolve incidents. Incidents are pushed to a mobile app with critical alert support. Perfect 😍! In your account navigate to **Setup** > **Step 4 Configure Integrations** and add **Zenduty API**. Copy the integration key and use in `ZENDUTY_API_KEY`.
 
 You can add another integration without rebuilding the image (I would recommend using a swarm config and mounting it to the integrations directory and changing `ALERT_SCRIPT` variable acordingly). Or just ask me for help.
+
+## Alerting for any service
+
+You can utilize swarm service healthchecks to create/resolve incidents for any other service based on their condition (even when they do not fail).
+
+See example of [Django management command for Celery monitoring ](https://gist.github.com/brablc/b5a585341af60dc2d2cc417b3d0b5a4e) - this script listens to celery workers' events (add `--events` to Celery worker command) and when it finds that some Celery task is failing consistently, its healthckeck would start failing too and this would be cought and reported by `swarm-health-alerter`.
