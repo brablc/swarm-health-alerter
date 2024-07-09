@@ -17,7 +17,7 @@ from collections import defaultdict, deque
 from logger import log_info, log_error
 
 ALERT_SCRIPT = os.getenv("ALERT_SCRIPT", "jq .")
-EVENTS_WINDOW = int(os.getenv("EVENTS_WINDOW", "300"))
+EVENTS_WINDOW = int(os.getenv("EVENTS_WINDOW", "120"))
 EVENTS_THRESHOLD = int(os.getenv("EVENTS_THRESHOLD", "2"))
 HOSTNAME = os.getenv("HOSTNAME", socket.gethostname())
 LOOP_SLEEP = int(os.getenv("LOOP_SLEEP", "10"))
@@ -84,13 +84,14 @@ def process_events():
     for event in events:
         action = event["action"]
         service_name = event["service_name"]
-        seen_services.add(service_name)
         if action in ("create", "destroy"):
             counts[service_name][action] += 1
+            seen_services.add(service_name)
         elif action == "exec_die":
             if event["exit_code"] == "0":
                 counts[service_name]["failed"] = 0
             else:
+                seen_services.add(service_name)
                 counts[service_name]["failed"] += 1
 
     for service_name, actions in counts.items():
