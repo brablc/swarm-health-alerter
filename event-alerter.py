@@ -127,7 +127,7 @@ def process_events():
             "unique_id": calculate_md5(
                 f"{SWARM_NAME} {service_name} {get_random_str(10)}"
             ),
-            "message": f"{SWARM_NAME} service {service_name} failing on {HOSTNAME}",
+            "message": f"{SWARM_NAME} service {service_name} failing healthcheck on {HOSTNAME}",
             "summary": f"There were {actions["failed"]} failed healthchecks within {EVENTS_WINDOW} seconds.",
         }
         pending_alerts[service_name] = data
