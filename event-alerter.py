@@ -17,7 +17,7 @@ from collections import defaultdict, deque
 from logger import log_info, log_error
 
 ALERT_SCRIPT = os.getenv("ALERT_SCRIPT", "jq .")
-EVENTS_WINDOW = int(os.getenv("EVENTS_WINDOW", "60"))
+EVENTS_WINDOW = int(os.getenv("EVENTS_WINDOW", "300"))
 EVENTS_THRESHOLD = int(os.getenv("EVENTS_THRESHOLD", "2"))
 HOSTNAME = os.getenv("HOSTNAME", socket.gethostname())
 LOOP_SLEEP = int(os.getenv("LOOP_SLEEP", "10"))
@@ -57,7 +57,9 @@ def docker_events_stream():
     url = f"{base_url}{urlparse.quote(socket_path, safe='')}{endpoint}"
 
     params = {
-        "filters": json.dumps({"type": ["container"], "event": ["create", "destroy"]})
+        "filters": json.dumps(
+            {"type": ["container"], "event": ["create", "destroy", "exec_die"]}
+        )
     }
 
     session = requests_unixsocket.Session()
@@ -72,7 +74,7 @@ def docker_events_stream():
 def process_events():
     current_time = time.time()
 
-    counts = defaultdict(lambda: {"create": 0, "destroy": 0})
+    counts = defaultdict(lambda: {"create": 0, "destroy": 0, "failed": 0})
     seen_services = set()
 
     # Remove events older than EVENTS_WINDOW
@@ -80,8 +82,16 @@ def process_events():
         events.popleft()
 
     for event in events:
-        counts[event["service_name"]][event["action"]] += 1
-        seen_services.add(event["service_name"])
+        action = event["action"]
+        service_name = event["service_name"]
+        seen_services.add(service_name)
+        if action in ("create", "destroy"):
+            counts[service_name][action] += 1
+        elif action == "exec_die":
+            if event["exit_code"] == "0":
+                counts[service_name]["failed"] = 0
+            else:
+                counts[service_name]["failed"] += 1
 
     for service_name, actions in counts.items():
         if not (
@@ -100,6 +110,24 @@ def process_events():
             ),
             "message": f"{SWARM_NAME} service {service_name} failing on {HOSTNAME}",
             "summary": f"There were {actions["create"]} containers created and {actions["destroy"]} destroyed within {EVENTS_WINDOW} seconds.",
+        }
+        pending_alerts[service_name] = data
+        send_alert(data)
+
+    for service_name, actions in counts.items():
+        if not actions["failed"] >= EVENTS_THRESHOLD:
+            continue
+
+        if service_name in pending_alerts:
+            continue
+
+        data = {
+            "action": "create",
+            "unique_id": calculate_md5(
+                f"{SWARM_NAME} {service_name} {get_random_str(10)}"
+            ),
+            "message": f"{SWARM_NAME} service {service_name} failing on {HOSTNAME}",
+            "summary": f"There were {actions["failed"]} failed healthchecks within {EVENTS_WINDOW} seconds.",
         }
         pending_alerts[service_name] = data
         send_alert(data)
@@ -142,6 +170,7 @@ def main():
                 "ts": event["time"],
                 "action": event["Action"],
                 "service_name": service_name,
+                "exit_code": attrs.get("exitCode", None),
             }
 
             # log_info(json.dumps(data))
