@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Build: docker build -t brablc/swarm-health-alerter:dev .
+
 network=${1?Expecting network name}
 shift
 

@@ -20,13 +20,21 @@ function get_service() {
 }
 
 while read service_name; do
-    ports=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL'"]')
 
-    if [[ "$ports" != "null" ]]; then
+    ports=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL_PORT'"]')
+    socks=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL_SOCK'"]')
+
+    if [[ "$ports" != "null" || "$socks" != "null" ]]; then
         network_alias=$(get_service $service_name | jq -r '.Spec.TaskTemplate.Networks[].Aliases[]' | sort | head -1)
         read service_id mode replicas < <(get_service $service_name | jq -r '"\(.ID) \(.Spec.Mode | keys[0]) \(.Spec.Mode.Replicated.Replicas)"')
         [[ $mode == "Replicated" && $replicas == 0 ]] && continue
 
-        echo $ports | sed 's/,/\n/g' | while read port; do echo "$service_name $network_alias $port"; done
+        if [[ "$ports" != "null" ]]; then
+            echo "$ports" | sed 's/,/\n/g' | while read port; do echo "$service_name $network_alias port $port"; done
+        fi
+
+        if [[ "$socks" != "null" ]]; then
+            echo "$socks" | sed 's/,/\n/g' | while read sock; do echo "$service_name $network_alias sock $sock"; done
+        fi
     fi
 done < <(get_services)

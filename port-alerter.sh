@@ -4,10 +4,12 @@ source "./config.sh"
 source "./logger.sh"
 source "./checks.sh"
 
+declare -A REPORTED_SOCKS
+
 function check_services() {
     local swarm_name=$SWARM_NAME
-    while read service_name network_alias port; do
-        unique_name=$(echo "${swarm_name} ${service_name} ${network_alias} ${port}" )
+    while read service_name network_alias check_type check_value; do
+        unique_name=$(echo "${swarm_name} ${service_name} ${network_alias} ${check_type} ${check_value}" )
         unique_code=$(echo "${unique_name,,}" | sed -e 's/ /_/g' -e 's/[^a-zA-Z0-9_-]/_/g')
         random_str=$(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 10)
         read unique_id _ < <(echo -n "$unique_name $random_str" | md5sum)
@@ -15,16 +17,33 @@ function check_services() {
         pending_file="${prefix}.pending"
         log_file="${prefix}.log"
 
-        # used for testing
-        real_port="$port"
-        if [[ -f "$DATA_DIR/test-change-port-$port" ]]; then
-            real_port=$(< "$DATA_DIR/test-change-port-$port")
+
+        if [[ $check_type == "port" ]]; then
+            port=$check_value
+            real_port="$port"
+            # used for testing
+            if [[ -f "$DATA_DIR/test-change-port-$port" ]]; then
+                real_port=$(< "$DATA_DIR/test-change-port-$port")
+            fi
+            WAIT="tcp://$network_alias:$real_port"
+        fi
+
+        if [[ $check_type == "sock" ]]; then
+            IFS=":" read sock_type sock_file <<< "$check_value"
+            if [[ ! -S $sock_file ]]; then
+                if [[ ! -v REPORTED_SOCKS[$sock_file] ]]; then
+                    log_warn "Sock file $sock_file does not exist locally!"
+                    REPORTED_SOCKS[$sock_file]=1
+                fi
+                continue
+            fi
+            WAIT="$check_value"
         fi
 
         action=""
         appendix=""
-        message="${swarm_name} service ${service_name} (${network_alias}:${port})"
-        ./dockerize -timeout 5s -wait tcp://$network_alias:$real_port true 2>$log_file
+        message="${swarm_name} service ${service_name} (${network_alias}:${check_value})"
+        ./dockerize -timeout 5s -wait "$WAIT" true 2>$log_file
         if [ $? -ne 0 ]; then
             if [[ -f $pending_file ]]; then
                 log_warn "Pending alert: $message"
