@@ -1,6 +1,6 @@
 ### 🚪Check opened socks
 
-Jump to [alerter configuration](https://github.com/brablc/swarm-health-alerter/docs/sock_monitoring.md#configuration).
+Jump to [alerter configuration](./sock_monitoring.md#configuration).
 
 #### Example
 
