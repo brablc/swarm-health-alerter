@@ -4,12 +4,17 @@ source "./config.sh"
 source "./logger.sh"
 source "./checks.sh"
 
+export NODE_TYPE=manager
 services=$(./services.sh 2>&1)
-if [ $? = 0 ]; then
-    log_info "Initial list of services:"
+if [ $? != 0 ]; then
+    export NODE_TYPE=worker
+    services=$(./services.sh 2>&1)
+fi
+
+if [[ "$services" != "" ]]; then
+    log_info "Starting port/sock alerter (initial list of services) ..."
     echo "$services"
 
-    log_info "Starting port alerter ..."
     ./port-alerter.sh &
     trap "kill $!" EXIT
 fi

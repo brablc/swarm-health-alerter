@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 
-url=$1
+VERSION="v1.43"
+
+uri=$1
 shift
 
 if (( $# )); then
-    url="$url?"
+    uri="$uri?"
 fi
 
 while (( $# > 1 )); do
     key=$1
     value=$2
     shift 2
-    url="${url}$key=$(echo $value | jq -s -R -r @uri)&"
+    uri="${uri}$key=$(echo $value | jq -s -R -r @uri)&"
 done
 
 if (( $# )); then
-    url="${url}$1"
+    uri="${uri}$1"
 fi
 
-curl -s --fail-with-body --unix-socket /var/run/docker.sock "http://v1.45$url"
+if [[ "$NODE_TYPE" == "worker" && "$SWARM_API_URL" != "" ]]; then
+    curl -s --fail-with-body "$SWARM_API_URL/$VERSION$uri"
+else
+    curl -s --fail-with-body --unix-socket /var/run/docker.sock "http://$VERSION$uri"
+fi

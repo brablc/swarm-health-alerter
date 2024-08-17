@@ -21,7 +21,11 @@ function get_service() {
 
 while read service_name; do
 
-    ports=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL_PORT'"]')
+    if [[ "$NODE_TYPE" == "manager" ]]; then
+        ports=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL_PORT'"]')
+    else
+        ports="null"
+    fi
     socks=$(get_service $service_name | jq -r '.Spec.Labels["'$LABEL_SOCK'"]')
 
     if [[ "$ports" != "null" || "$socks" != "null" ]]; then
