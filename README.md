@@ -23,29 +23,9 @@ services:
                 - "swarm-health-alerter.port=5672,15672"
 ```
 
-The port monitoring does not ensure proper number of instances, it it satisfied when at least one instance is running on the port.
+The port monitoring does not ensure proper number of instances, it is satisfied when at least one instance is running on the port.
 
-If you have some containers communicating on the same host using unix socks you can monitor them too:
-
-```yml
-services:
-    django:
-        image: my-django-app
-        networks:
-            - app
-        deploy:
-            placement:
-                constraints:
-                    - node.role == worker
-                max_replicas_per_node: 1
-            labels:
-                - "swarm-health-alerter.sock=unix:/run/mystack_django.sock"
-        entrypoint: ["gunicorn", "app.wsgi:application", "--bind", "unix:/run/mystack_django.sock"]
-        volumes:
-            - /run:/run
-```
-
-Sock monitoring checks presence of the sock file on each node, and if it exists it checks if the sock is alive - more accurate than port check.
+Monitoring of processes communicating via unix socks is supported - it has some advantages, but requires extra step - see [documentation](./docs/sock_monitoring.md).
 
 ### 📜 Docker events
 
