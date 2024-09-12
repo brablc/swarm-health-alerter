@@ -84,6 +84,8 @@ def process_events():
     for event in events:
         action = event["action"]
         service_name = event["service_name"]
+        if "adhoc" in service_name:
+            continue
         if action in ("create", "destroy"):
             counts[service_name][action] += 1
             seen_services.add(service_name)

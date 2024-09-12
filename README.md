@@ -35,6 +35,9 @@ Uses [Docker Events API](https://docs.docker.com/engine/api/v1.45/#tag/System/op
 
 Sometimes your service would fail (or be killed by healthcheck) and restart. This would be seen as event `destroy` and `create`. If both the number of `destroy` and `create` events exceed configured `EVENTS_THRESHOLD` within `EVENTS_WINDOW`, the service is deemed unhealthy and alert is created. If there was no event from the service within the window, the problem is deemed resolved.
 
+> [!TIP]
+> Services containing `adhoc` in their name are ignored.
+
 #### 💔 Failing healthcheck
 
 When healtcheck fails for given number of retries, it would normally lead to a service restart. In certain situation this is better avoided as it can lead to loss of data (imagine RabbitMQ being killed while recovering queues from disk). In such situation you may prefer to set high number of retries for healtcheck: `retries: 9999` and get alerted when the number of failed healthcheck retries exceeds configured `EVENTS_THRESHOLD`.
