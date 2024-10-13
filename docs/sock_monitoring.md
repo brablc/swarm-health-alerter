@@ -174,7 +174,7 @@ services:
         deploy:
             mode: global
         environment:
-            SWARM_API_URL: "http://swarm-api:2375"
+            SWARM_API_URL: "http://swarm-api.:2375"
             EVENTS_THRESHOLD: 3
             EVENTS_WINDOW: 120
             LOOP_SLEEP: 10
