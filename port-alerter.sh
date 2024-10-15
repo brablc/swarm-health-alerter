@@ -26,6 +26,7 @@ function check_services() {
                 real_port=$(< "$DATA_DIR/test-change-port-$port")
             fi
             WAIT="tcp://$network_alias:$real_port"
+            WHERE="via mesh"
         fi
 
         if [[ $check_type == "sock" ]]; then
@@ -38,6 +39,7 @@ function check_services() {
                 continue
             fi
             WAIT="$check_value"
+            WHERE="at $HOSTNAME"
         fi
 
         action=""
@@ -50,12 +52,12 @@ function check_services() {
             else
                 echo "$unique_id" > $pending_file
                 action="create"
-                appendix="not available"
+                appendix="not available $WHERE"
             fi
         else
             if [[ -f $pending_file ]]; then
                 action="resolve"
-                appendix="is available"
+                appendix="is available $WHERE"
                 unique_id=$(cat $pending_file)
                 rm -f $pending_file
             fi
