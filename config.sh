@@ -9,5 +9,6 @@ export LOGGER_USE_SYSLOG=0
 export LOGGER_USE_TS=1
 export LOOP_SLEEP=${LOOP_SLEEP:-10}
 export SWARM_NAME=${SWARM_NAME:-Swarm}
+export SWARM_MANAGER_MIN=${SWARM_MANAGER_MIN:-3}
 
 export DATA_DIR=${DATA_DIR:-$script_dir/data}
