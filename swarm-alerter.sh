@@ -5,9 +5,6 @@ source "./logger.sh"
 source "./checks.sh"
 
 function check_nodes() {
-
-  source "./config.sh"
-
   local active_node_count
   active_node_count=$(./nodes.sh | wc -l)
   local swarm_name=$SWARM_NAME
@@ -16,13 +13,7 @@ function check_nodes() {
   local log_file="${prefix}.log"
   local where="at $HOSTNAME"
 
-  ./docker-api.sh /nodes | jq '.[] | select(.Spec.Role == "manager") |
-    {
-      hostname: .Description.Hostname,
-      leader: (.ManagerStatus.Leader // false),
-      status: .Status,
-      spec: .Spec
-    }' >"$log_file"
+  ./nodes.sh --verbose >"$log_file"
 
   action=""
   appendix=""
@@ -31,7 +22,7 @@ function check_nodes() {
     if [[ -f $pending_file ]]; then
       log_warn "Pending alert: $message"
     else
-      echo "$unique_id" >"$pending_file"
+      tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 32 >"$pending_file"
       action="create"
       appendix="is less than $SWARM_MANAGER_MIN $where"
     fi

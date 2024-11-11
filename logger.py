@@ -14,11 +14,7 @@ def log(level, message):
     RESET = "\033[39m"
 
     color = COLORS.get(level, COLORS["DEFAULT"])
-    timestamp = (
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S|")
-        if int(os.getenv("LOGGER_USE_TS", "0"))
-        else ""
-    )
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S|") if int(os.getenv("LOGGER_USE_TS", "0")) else ""
 
     if sys.stdout.isatty() or "CONTENT_TYPE" in os.environ:
         print(f"{color}-{level[0]}|{timestamp}{message}{RESET}", file=sys.stderr)
