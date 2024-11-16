@@ -22,9 +22,10 @@ function check_nodes() {
     if [[ -f $pending_file ]]; then
       log_warn "Pending alert: $message"
     else
-      tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 32 >"$pending_file"
       action="create"
       appendix="is less than $SWARM_MANAGER_MIN $where"
+      tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 32 >"$pending_file"
+      unique_id=$(cat "$pending_file")
     fi
   else
     if [[ -f $pending_file ]]; then
