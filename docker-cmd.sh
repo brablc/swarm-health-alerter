@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2064,SC2181
 
 source "./config.sh"
 source "./logger.sh"
@@ -11,7 +12,7 @@ if [ $? != 0 ]; then
   services=$(./services.sh 2>&1)
 fi
 
-if [[ "$services" != "" ]]; then
+if [[ $services != "" ]]; then
   log_info "Starting port/sock alerter (initial list of services) ..."
   echo "$services"
 
@@ -19,11 +20,15 @@ if [[ "$services" != "" ]]; then
   trap "kill $!" EXIT
 
   log_info "Starting swarm alerter (initial state of nodes) ..."
-  ./nodes.sh --verbose
+  ./nodes.sh
 
   ./swarm-alerter.sh &
   trap "kill $!" EXIT
 fi
+
+log_info "Starting disk alerter..."
+./disk-alerter.sh &
+trap "kill $!" EXIT
 
 log_info "Starting event alerter ..."
 ./event-alerter.py

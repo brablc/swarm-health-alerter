@@ -4,21 +4,24 @@ source "./config.sh"
 source "./logger.sh"
 source "./checks.sh"
 
+DATA_PREFIX="$DATA_DIR/swarm-alerter"
+
 function check_nodes() {
   local active_node_count
-  active_node_count=$(./nodes.sh | wc -l)
   local swarm_name=$SWARM_NAME
-  local prefix="$DATA_DIR/swarm_failure"
+  local prefix="${DATA_PREFIX}"
   local pending_file="${prefix}.pending"
   local log_file="${prefix}.log"
   local where="at $HOSTNAME"
 
-  ./nodes.sh --verbose >"$log_file"
+  active_node_count=$(./nodes.sh | wc -l)
 
   action=""
   appendix=""
   message="${swarm_name} swarm active managers count $active_node_count"
   if ((SWARM_MANAGER_MIN > active_node_count)); then
+    ./nodes.sh --verbose &>"$log_file"
+
     if [[ -f $pending_file ]]; then
       log_warn "Pending alert: $message"
     else
@@ -48,10 +51,9 @@ function check_nodes() {
          "summary": $summary
        }' | /bin/bash -c "$ALERT_SCRIPT"
   fi
-  rm -f "$log_file"
 }
 
-log_info "Entering loop with ${LOOP_SLEEP} sleep on entry ..."
+log_info "Swarm alerter is entering loop with ${LOOP_SLEEP} sleep on entry ..."
 
 while true; do
   sleep "$LOOP_SLEEP"

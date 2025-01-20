@@ -14,6 +14,7 @@ PARAMS=(
   --env LOOP_SLEEP="${LOOP_SLEEP:-10}"
   --env SWARM_NAME="${SWARM_NAME:-Swarm}"
   --env ZENDUTY_API_KEY="${ZENDUTY_API_KEY:-N/A}"
+  --volume /:/rootfs:ro
   --volume /var/run/docker.sock:/var/run/docker.sock
   --volume .:/app/
 )

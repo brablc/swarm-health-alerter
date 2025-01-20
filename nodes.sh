@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2002
+
 source "./config.sh"
 source "./logger.sh"
 source "./checks.sh"
 
 if ! ./docker-api.sh /nodes >/tmp/nodes; then
+  log_error "Call to docker-api.sh failed."
+  cat /tmp/nodes
   log_error "$(jq -r .message /tmp/nodes 2>/dev/null || cat /tmp/nodes)"
   exit 1
 fi

@@ -5,6 +5,7 @@ SCRIPT_PATH=$(readlink -f "$0")
 SCRIPT_DIR=${SCRIPT_PATH%/*}
 cd "$SCRIPT_DIR"
 
+export DISK_USAGE_MAX=${DISK_USAGE_MAX:-85}
 export LABEL_PORT="swarm-health-alerter.port"
 export LABEL_SOCK="swarm-health-alerter.sock"
 export LOGGER_USE_SYSLOG=0
