@@ -1,5 +1,7 @@
+# shellcheck disable=SC2034
+
 SCRIPT_NAME=${0##*/}
-SCRIPT_PATH=$(readlink -f $0)
+SCRIPT_PATH=$(readlink -f "$0")
 SCRIPT_DIR=${SCRIPT_PATH%/*}
 cd "$SCRIPT_DIR"
 
